@@ -16,7 +16,7 @@ public class GameListInfo {
     private Long id;
     private String name;
     private GameCover cover;
-    private List<GamePlatform> platforms;
+    private List<GameReleaseDate> release_dates;
     private List<GameGenre> genres;
     private String summary;
 }

@@ -12,5 +12,5 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameReleaseDate {
-    private String human;
+    private Integer y;
 }

@@ -32,11 +32,16 @@ public class GameService {
     private String accessToken = null;
 
     private void fetchAccessToken() {
-        String url = authUrl + "?client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=client_credentials";
+        try {
+            String url = authUrl + "?client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=client_credentials";
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, null, Map.class);
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            accessToken = (String) response.getBody().get("access_token");
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, null, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                accessToken = (String) response.getBody().get("access_token");
+            }
+        }
+        catch (Exception e) {
+            log.error("error fetch access token");
         }
     }
 
@@ -59,11 +64,19 @@ public class GameService {
             setHeader(headers);
 
             // Query IGDB API
-            String body = String.format("search \"%s\"; fields id,name,summary,cover.url,platforms.name,genres.name; limit %d; offset %d;", keyword, limit, offset);
-
-            HttpEntity<String> request = new HttpEntity<>(body, headers);
+            var query =  String.format("fields id,name,summary,cover.url,platforms.name,genres.name,release_dates.y; limit %d; offset %d;", limit, offset);
+            if(keyword != null && !keyword.equals("")) {
+                query = String.format(query + "search \"%s\";", keyword);
+            }
+            HttpEntity<String> request = new HttpEntity<>(query, headers);
             ResponseEntity<GameListInfo[]> response = restTemplate.exchange(apiGameUrl, HttpMethod.POST, request, GameListInfo[].class);
             var gameList = List.of(response.getBody());
+            // ganti ke gambar besar
+            gameList.forEach(g -> {
+                if (g.getCover() != null) {
+                    g.getCover().setUrl(g.getCover().getUrl().replace("t_thumb", "t_cover_big"));
+                }
+            });
             result.setStatus(HttpStatus.OK.value());
             result.setData(GameList.builder().games(gameList).build());
             result.setMessage("Success retrieving games");
@@ -87,7 +100,7 @@ public class GameService {
 
             // Query IGDB API
             String body = String.format("fields id,name,summary,cover.url,platforms.name,genres.name,franchise.name,involved_companies.company.name,screenshots.url,similar_games.name," +
-                    "release_dates.human,rating,rating_count; where id = %d;", id);
+                    "release_dates.y,rating,rating_count; where id = %d;", id);
             HttpEntity<String> request = new HttpEntity<>(body, headers);
             ResponseEntity<GameDetail[]> response = restTemplate.exchange(apiGameUrl, HttpMethod.POST, request, GameDetail[].class);
 
