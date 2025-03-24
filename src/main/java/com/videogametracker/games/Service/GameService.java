@@ -63,9 +63,14 @@ public class GameService {
             HttpHeaders headers = new HttpHeaders();
             setHeader(headers);
 
+            // Ambil total jumlah game yang tersedia
+            int totalGames = getTotalGamesCount(keyword);
+            int totalPages = (int) Math.ceil((double) totalGames / limit);
+            int currentPage = (offset / limit) + 1;
+
             // Query IGDB API
-            var query =  String.format("fields id,name,summary,cover.url,platforms.name,genres.name,release_dates.y; limit %d; offset %d;", limit, offset);
-            if(keyword != null && !keyword.equals("")) {
+            var query =  String.format("fields id,name,summary,cover.url,platforms.name,genres.name,release_dates.y; where game_type = (0, 1); limit %d; offset %d;", limit, offset);
+            if(keyword != null && !keyword.isEmpty()) {
                 query = String.format(query + "search \"%s\";", keyword);
             }
             HttpEntity<String> request = new HttpEntity<>(query, headers);
@@ -78,7 +83,7 @@ public class GameService {
                 }
             });
             result.setStatus(HttpStatus.OK.value());
-            result.setData(GameList.builder().games(gameList).build());
+            result.setData(GameList.builder().games(gameList).totalGames(totalGames).totalPages(totalPages).currentPage(currentPage).build());
             result.setMessage("Success retrieving games");
             return ResponseEntity.ok(result);
         }
@@ -89,6 +94,23 @@ public class GameService {
             result.setMessage("Error retrieving games");
             return ResponseEntity.badRequest().body(result);
         }
+    }
+
+    private int getTotalGamesCount(String keyword) {
+        HttpHeaders headers = new HttpHeaders();
+        setHeader(headers);
+
+        // Query untuk mengambil semua ID game yang cocok
+        String countQuery = "fields id; limit 100; where  game_type = (0, 1);"; //cek sampai 100 game
+        if (keyword != null && !keyword.isEmpty()) {
+            countQuery += String.format(" search \"%s\";", keyword);
+        }
+
+        HttpEntity<String> request = new HttpEntity<>(countQuery, headers);
+        ResponseEntity<GameListInfo[]> response = restTemplate.exchange(apiGameUrl, HttpMethod.POST, request, GameListInfo[].class);
+
+        // Hitung jumlah elemen dalam array hasil query
+        return response.getBody() != null ? response.getBody().length : 0;
     }
 
     public ResponseEntity<BaseResponse> getGameDetail(Long id) {

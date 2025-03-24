@@ -16,7 +16,7 @@ public class RequestLoggingFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        System.out.println("🔍 Masuk ke RequestLoggingFilter...");
+//        System.out.println("🔍 Masuk ke RequestLoggingFilter...");
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String authorizationHeader = httpServletRequest.getHeader("Authorization");
 

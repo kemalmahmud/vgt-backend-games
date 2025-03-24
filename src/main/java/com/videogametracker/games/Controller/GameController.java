@@ -19,7 +19,7 @@ public class GameController {
         return gameService.getGameList(limit, offset, keyword);
     }
 
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<BaseResponse> getGameDetail(@PathVariable Long id) {
         return gameService.getGameDetail(id);
     }

@@ -13,4 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class GameList {
     private List<GameListInfo> games;
+    private Integer currentPage;
+    private Integer totalGames;
+    private Integer totalPages;
 }
